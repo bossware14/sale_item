@@ -1,1 +1,409 @@
-Temp
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Socket</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=K2D:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Doto:wght@100..900&family=Silkscreen:wght@400;700&family=VT323&display=swap');
+    </style>
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
+    <style>
+        * {
+            font-family: "K2D", serif;
+            font-weight: 400;
+            font-style: normal;
+            cursor: none !important;
+        }
+    </style>
+    <script>
+        var socket = io();
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // เมื่อเชื่อมต่อ
+            socket.on('connect', function() {
+                socket.send('connect');
+            });
+            // ตอบกลับ จาก server
+            socket.on('message', function(res) {
+                var p = document.createElement('p');
+                p.innerText = JSON.stringify(res);
+                if(res.msg == 'createQR' && res.status == 'padding' && res.img && res.refId){
+                     $('#payment_qr_sale').attr("src",res.img);
+                     localStorage.setItem('refId',res.refId)
+                     return setTimeout(function(){checkRef(res.refId)},5000)
+                    //return false;
+                }
+                if (res.status == 'failed') {
+                    return localStorage.removeItem('refId')
+                }
+                if (res.status == 'success' && res.refId && res.msg == 'ชำระเงินเรียบร้อยแล้ว'){
+                   localStorage.removeItem('refId')
+                   myIyems = localStorage.getItem("all_items")
+                   var data = {}
+                   data.status = 'action';
+                   data.key = 'sendItem';
+                   data.value = localStorage.getItem("all_items");
+                   socket.send(JSON.stringify(data));
+                   getIall();
+                   localStorage.removeItem('sendItem')
+                   return fn.load('success.html');
+                }
+                if (res.status == 'padding' && res.refId) {
+                     localStorage.setItem('refId',res.refId)
+                     return setTimeout(function(){checkRef(res.refId)},1000)
+                }
+                if (res.status == 'success') {
+                    //document.getElementById('status').innerHTML = JSON.stringify(res);
+                } else {
+                    //document.getElementById('status').innerHTML = JSON.stringify(msg);
+                    //document.getElementById('status').appendChild(p);
+                }
+            });
+        });
+
+        function res_id(id, str) {
+            document.getElementById(id).innerHTML = str;
+        }
+
+        function CheckData() {
+            var data = {}
+            data.status = 'message';
+            data.key = 'start';
+            data.value = 1;
+            socket.send(JSON.stringify(data));
+        }
+
+        function sendMsg() {
+            var data = {}
+            data.status = 'update';
+            data.key = 'msg';
+            data.value = $('#msg').val();
+            socket.send(JSON.stringify(data));
+        }
+
+        function sendAction() {
+            var data = {}
+            data.status = 'update';
+            data.key = 'action';
+            data.value = $('#action').val();
+            socket.send(JSON.stringify(data));
+        }
+
+        function LoginPlayer(id, val) {
+            var data = {}
+            data.status = 'update';
+            data.key = id;
+            data.value = val;
+            socket.send(JSON.stringify(data));
+        }
+
+        function action() {
+            var data = {}
+            data.status = 'action';
+            data.key = $('#key').val();
+            data.value = $('#value').val();
+            socket.send(JSON.stringify(data));
+        }
+
+    </script>
+</head>
+<body>
+    <ons-splitter>
+        <ons-splitter-side id="menu" side="left" width="220px" collapse swipeable>
+            <ons-page>
+                <ons-list>
+                    <ons-list-item onclick="fn.load('home.html')" tappable>
+                        Home
+                    </ons-list-item>
+                    <ons-list-item onclick="fn.load('login.html')" tappable>
+                        Login
+                    </ons-list-item>
+                    <ons-list-item onclick="fn.load('register.html')" tappable>
+                        Register
+                    </ons-list-item>
+                    <ons-list-item onclick="fn.load('sale.html')" tappable>
+                        สินค้า
+                    </ons-list-item>
+                    <ons-list-item onclick="fn.load('table.html')" tappable>
+                        ตาราง
+                    </ons-list-item>
+
+                    <ons-list-item onclick="fn.load('profile.html')" tappable>
+                        โปรไฟล
+                    </ons-list-item>
+
+                    <ons-list-item onclick="fn.load('tab3.html')" tappable>
+                        ชำระเงิน
+                    </ons-list-item>
+                </ons-list>
+            </ons-page>
+        </ons-splitter-side>
+
+        <ons-splitter-content id="content" page="sale.html"></ons-splitter-content>
+    </ons-splitter>
+    <template id="sale.html">
+        <ons-page>
+
+            <div class="row m-0 p-0" id="list_items">
+
+            </div>
+            <ons-card style="display:none" id="scan_sale">
+                <ons-row>
+                    <ons-col class="me-2">
+                        <div id="m-2">
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <div id="title_sale">
+                                        แสกนเพื่อชำระเงิน
+                                    </div>
+                                    <div>
+                                        <img id="payment_qr_sale" class="border rounded" style="width:200px;max-height:200px;" width="100%"
+                                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbF0JgqiEWN6wFHxWQCrIfllBR_qsNVq-1Cg&usqp=CAU">
+                                    </div>
+                                </div>
+                                <div class="col-12 text-center">
+                                    <img style="max-height:50px;" class="mt-2" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdndEW1NXNFi-MBmS8QX-6DgJghX2HpJOh_aMJ0Zjj1TTzNWTgpQa8bqw&s=10">
+                                </div>
+                            </div>
+                        </div>
+                    </ons-col>
+                </ons-row>
+                <ons-button onclick="fn.load('confirm.html')" onclick="re_checkout() ">ย้อนกลับ</ons-button>
+            </ons-card>
+            <script>
+
+
+        function createQR(amount) {
+            if(amount <= 0){
+                return false;
+            }
+            var data = {}
+            data.status = 'action';
+            data.key = 'createQR';
+            data.value = amount;
+            data.data = localStorage.getItem("all_items");
+            socket.send(JSON.stringify(data));
+        }
+
+        function checkRef(refId) {
+            if(refId <= 0){
+                return false;
+            }
+            var data = {}
+            data.status = 'action';
+            data.key = 'checkRef';
+            data.value = refId;
+            socket.send(JSON.stringify(data));
+        }
+
+
+                function OnLoadItems() {
+$.getJSON('/item',function(item){
+/* var item = [{
+                    "id": 1,
+                    "cate": "น้ำยาซักผ้า",
+                    "name": "บรีสเอกเซลสูตรน้ำ",
+                    "size": "25 มล.",
+                    "image": "https://down-th.img.susercontent.com/file/th-11134207-7r98u-lqfr28j9qxnobc",
+                    "price": "5"
+                }, {
+                    "id": 2,
+                    "cate": "น้ำยาปรับผ้านุ่ม",
+                    "name": "ดาวน์นี่ ซันไรซ์เฟรช",
+                    "size": "20 มล.",
+                    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWVgRqZfhzKI9rRpb0-2J0FfpY6MzsX9aHNkT26Ur7xQ&s",
+                    "price": "2"
+                }];
+*/
+                    var html_item = '';
+                    $.each(item, function(a,
+                        v) {
+                        html_item += '<div class="col-sm-6 col-6 m-0 p-0">';
+                        html_item += '<ons-card>';
+                        html_item += '<ons-row>';
+                        html_item += '<ons-col class="m-0 p-0">';
+                        html_item += '<img width="100%" src="'+v.image+'">';
+                        html_item += '</ons-col>';
+                        //html_item += '<ons-col>';
+                        html_item += '</ons-row>';
+                        html_item += '<div class="mt-2">';
+                        html_item += '<div class="">';
+                        html_item += ''+v.cate+'';
+                        html_item += '</div>';
+                        html_item += '<div class="">';
+                        html_item += ''+v.name+'';
+                        html_item += '</div>';
+                        html_item += '<div class="">';
+                        html_item += 'ขนาด : '+v.size+'';
+                        html_item += '</div>';
+                        //html_item += '<br>';
+                        html_item += '<div class="mb-auto">';
+                        html_item += 'ซองละ '+v.price+' บาท';
+                        html_item += '</div>';
+                        html_item += '<div class="mt-2" style="display:none" id="item_order_'+v.id+'">';
+                        html_item += '<div class="input-group">';
+                        html_item += '<button class="ps-3 pe-3 btn btn-sm btn-primary" onclick="if($(`#order_'+v.id+'`).val() <= 0){ return false;}$(`#order_'+v.id+'`).val((parseInt($(`#order_'+v.id+'`).val())-1));getSumItem()">-</button>';
+                        html_item += '<input name="id_pt[]" value="'+v.id+'" id="id_'+v.id+'" type="hidden"><input name="size_pt[]" value="'+v.size+'" id="size_'+v.id+'"type="hidden"><input name="name_pt[]" id="name_'+v.id+'" value="'+v.name+'" type="hidden"><input name="sale_product[]" id="order_'+v.id+'" readonly="" min="0" max="999" value="0" class="form-control form-control-sm text-center" type="number" placeholder="จำนวน">';
+                        html_item += '<input name="price_product[]" readonly=""  value="'+v.price+'" type="hidden">';
+                        html_item += '<button class="ps-3 pe-3 btn btn-sm btn-primary" onclick="$(`#order_'+v.id+'`).val((parseInt($(`#order_'+v.id+'`).val())+1));getSumItem();">+</button>';
+                        html_item += '</div>';
+                        html_item += '</div>';
+                        html_item += '<div class="mt-2">';
+                        html_item += '<ons-button onclick="$(`#order_'+v.id+'`).val(1);$(`#item_order_'+v.id+'`).show();$(this).hide();getSumItem()" class="w-100 text-center btn-sm">เลือก</ons-button>';
+                        html_item += '</div>';
+                        html_item += '</div>';
+                        //html_item += '</ons-col>';
+                        //html_item += '</ons-row>';
+                        html_item += '</ons-card>';
+                        html_item += '</div>';
+                    })
+                    $('#list_items').html(html_item);
+})
+                }
+
+                function getSumItem() {
+                    var products = $('input[name="sale_product[]"]');
+                    var pr_price = $('input[name="price_product[]"]');
+                    var id_pt = $('input[name="id_pt[]"]');
+                    var name_pt = $('input[name="name_pt[]"]');
+                    var size_pt = $('input[name="size_pt[]"]');
+                    sums = 0;
+                    var ITEMS = [];
+                    var DEV = {};
+                    var it = 0;
+ss =0; 
+$.each(id_pt, function(i,k) {
+             var DEV = {};
+                    //$.each(products, function(i,k) {
+                     //   if (products[i].value != 0) {
+                            DEV['id'] = id_pt[i].value;
+                            DEV['name'] = name_pt[i].value;
+                            DEV['size'] = size_pt[i].value;
+                            DEV['price'] = parseFloat(pr_price[i].value);
+                            DEV['value'] = parseFloat(products[i].value);
+                            sums += (parseFloat(DEV['price'])*parseFloat(DEV['value']));
+                            ITEMS[it] = DEV;
+                            it++;
+                        //}
+                       ss++;
+                        console.log(k.value)
+                    //})
+})
+                    $('#sum_total').html(sums)
+                    $('#title_sale').html('ชำระเงิน '+sums+' บาท');
+                    localStorage.setItem("sum_total", sums);
+                    localStorage.setItem("all_items", JSON.stringify(ITEMS));
+                    localStorage.setItem("title_sale", 'ชำระเงิน '+sums+' บาท');
+                    console.log(products)
+                    console.log(ITEMS)
+
+                }
+
+                function checkout() {
+                    $('#list_items').hide();
+                    $('#bottom_bar').hide();
+                    $('#scan_sale').show();
+                    createQR($('#sum_total').html());
+                    //fn.load('confirm.html');
+                }
+
+                function re_checkout() {
+                    $('#list_items').show();
+                    $('#bottom_bar').show();
+                    $('#scan_sale').hide();
+                }
+
+                $('#list_items').show();
+                $('#bottom_bar').show();
+                $('#scan_sale').hide();
+                OnLoadItems();
+
+
+function getIall(){
+    itemx = JSON.parse(localStorage.getItem('all_items'))
+    console.log(itemx)
+    $.each(itemx, function(i,k) {
+      if(k.value > 0){
+        $.getJSON('/rl?id='+k.id+'&count='+k.value);
+      }
+    })
+    localStorage.removeItem('all_items')
+}
+
+            </script>
+            <ons-bottom-toolbar id="bottom_bar" someAttribute="true" anotherAttribute>
+                <div class="row ms-2 me-2 mt-1">
+                    <div class="col-6 h2">
+                        รวม : <b id="sum_total">0</b> บาท
+                    </div>
+                    <div class="col-6 text-end">
+                        <ons-button onclick="checkout()">ยืนยัน</ons-button>
+                    </div>
+                </div>
+            </ons-bottom-toolbar>
+        </ons-page>
+    </template>
+    <template id="confirm.html">
+        <ons-page>
+            <ons-card>
+                กรุณาชำระเงิน
+                <div id="CONFIRM_MONEY">
+                </div>
+            </ons-card>
+            <div>
+                <ons-button onclick="fn.load('sale.html')">ย้อนกลับ</ons-button>
+                <ons-button onclick="fn.load('success.html')">สำเร็จ</ons-button>
+            </div>
+        </ons-page>
+    </template>
+
+    <template id="success.html">
+            <ons-card id="success">
+                <ons-row>
+                    <ons-col class="me-2">
+                        <div id="m-2">
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <div id="title_sales">
+                                        รับสินค้า
+                                    </div>
+                                    <div>
+                                        <img id="appsv" class="border rounded" style="width:200px;max-height:200px;" width="100%"
+                                        src="https://cdn.pixabay.com/animation/2022/12/05/10/29/10-29-30-682_512.gif">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ons-col>
+                </ons-row>
+            </ons-card>
+    </template>
+    <script>
+
+        window.fn = {};
+        window.fn.open = function() {
+            var menu = document.getElementById('menu');
+            menu.open();
+        };
+
+        window.fn.load = function(page) {
+            var content = document.getElementById('content');
+            var menu = document.getElementById('menu');
+            content.load(page).then(menu.close.bind(menu));
+        };
+
+    </script>
+</body>
+</html>
