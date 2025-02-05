@@ -271,7 +271,7 @@ def button_callback(channel):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('test.html')
 
 @socketio.event()
 def my_event(message):
