@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPIO</title>
+    <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io();
+        document.addEventListener('DOMContentLoaded', (event) => {
+            socket.on('connect', function() {
+                socket.send('connect');
+            });
+            socket.on('message', function(msg) {
+                var p = document.createElement('p');
+                p.innerText = JSON.stringify(msg);
+                console.log(msg)
+                $('#17').attr("checked",msg.data[17]);
+                $('#22').attr("checked",msg.data[22])
+                $('#23').attr("checked",msg.data[23])
+                $('#27').attr("checked",msg.data[27])
+                $('#tm1637').val(msg.data["tm1637"])
+
+            });
+        });
+
+        function res_id(id, str) {
+            document.getElementById(id).innerHTML = str;
+        }
+
+        function CheckData() {
+            var data = {}
+            data.status = 'message';
+            data.key = 'start';
+            data.value = 1;
+            socket.send(JSON.stringify(data));
+        }
+
+        function toggleCheckbox(id,app) {
+            var data = {}
+            data.status = 'start';
+            data.key = 'gpio';
+            data.value = id;
+            data.data = app;
+            socket.send(JSON.stringify(data));
+        }
+        function TM1637() {
+            var data = {}
+            data.status = 'tm1637';
+            data.key = 'tm1637';
+            data.value = $('#tm1637').val();
+            socket.send(JSON.stringify(data));
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            margin: 0px auto;
+            padding-top: 30px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 120px;
+            height: 68px
+        }
+
+        .switch input {
+            display: none
+        }
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 34px
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 52px;
+            width: 52px;
+            left: 8px;
+            bottom: 8px;
+            background-color: #fff;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 68px
+        }
+        input:checked+.slider {
+            background-color: #2196F3
+        }
+        input:checked+.slider:before {
+            -webkit-transform: translateX(52px);
+            -ms-transform: translateX(52px);
+            transform: translateX(52px)
+        }
+    </style>
+
+
+</head>
+<body>
+    <div>
+    <h4>GPIO-17</h4>
+    <label class="switch">
+        <input type="checkbox" id="17" onchange="toggleCheckbox(17,this.checked)">
+        <span class="slider"></span>
+    </label>
+    </div>
+    <div>
+    <h4>GPIO-22</h4>
+    <label class="switch">
+        <input type="checkbox" id="22" onchange="toggleCheckbox(22,this.checked)">
+        <span class="slider"></span>
+    </label>
+    </div>
+
+    <div>
+    <h4>GPIO-23</h4>
+    <label class="switch">
+        <input type="checkbox" id="23" onchange="toggleCheckbox(23,this.checked)">
+        <span class="slider"></span>
+    </label>
+    </div>
+
+    <div>
+    <h4>GPIO-27</h4>
+    <label class="switch">
+        <input type="checkbox" id="27" onchange="toggleCheckbox(27,this.checked)">
+        <span class="slider"></span>
+    </label>
+    </div>
+<br>
+<div>
+    <h4>TM1637</h4>
+    <input id="tm1637" type="text" value="" maxlength="4">
+    <button onclick="TM1637()">OK</button>
+</div>
+
+</body>
+</html>
+</body>
+</html>
