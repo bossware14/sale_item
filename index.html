@@ -195,6 +195,9 @@
             data.value = amount;
             data.data = localStorage.getItem("all_items");
             socket.send(JSON.stringify(data));
+            $.getJSON('/getcoin?coin='+amount,function(str){
+            getIall()
+            });
         }
 
         function checkRef(refId) {
@@ -331,12 +334,16 @@ $.each(id_pt, function(i,k) {
                 OnLoadItems();
 
 
-function getIall(){
+ function getIall(){
     itemx = JSON.parse(localStorage.getItem('all_items'))
     console.log(itemx)
     $.each(itemx, function(i,k) {
       if(k.value > 0){
-        $.getJSON('/rl?id='+k.id+'&count='+k.value);
+         $.getJSON('/rl?id='+k.id+'&count='+k.value,function(str){
+            localStorage.removeItem('all_items')
+            fn.load('sale.html');
+            
+        });
       }
     })
     localStorage.removeItem('all_items')
